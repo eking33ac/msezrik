@@ -64,9 +64,7 @@ class MineSweeperView extends View {
     }
     private void drawbmp(Bitmap bm, int x, int y, int w, int h)
     {
-        print("Entered drawbmp");
         canvas.drawBitmap(bm, null, new Rect(x,y,x+w-1, y+h-1), null);
-        print("Drew drawbmp");
     }
     @Override
     public void onDraw(Canvas canvas) {
@@ -110,6 +108,11 @@ class MineSweeperView extends View {
         // right border line
         canvas.drawLine(rightX, topY, rightX, bottomY, fg);
 
+
+        // display coordinants
+        fg.setColor(Color.BLACK);
+        fg.setTextSize(24);
+        this.canvas.drawText("x = " + touchX + ", y = " + touchY, touchX, touchY, fg);
     }
 
     private RowCol getIndex(int x, int y)
@@ -157,9 +160,9 @@ class MineSweeperView extends View {
             }
         } // else, do not update status array
 
-        // display coordinants?
-
         invalidate();
+
+
         return super.onTouchEvent(e);
     }
 }
