@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
+import android.view.MotionEvent;
 
 class MineSweeperView extends View {
     private String tag = "EEK";
@@ -63,7 +64,9 @@ class MineSweeperView extends View {
     }
     private void drawbmp(Bitmap bm, int x, int y, int w, int h)
     {
+        print("Entered drawbmp");
         canvas.drawBitmap(bm, null, new Rect(x,y,x+w-1, y+h-1), null);
+        print("Drew drawbmp");
     }
     @Override
     public void onDraw(Canvas canvas) {
@@ -107,6 +110,57 @@ class MineSweeperView extends View {
         // right border line
         canvas.drawLine(rightX, topY, rightX, bottomY, fg);
 
+    }
+
+    private RowCol getIndex(int x, int y)
+    {
+        RowCol rc = new RowCol();
+        // use x, y and XBASE, YBASE, ROWS, COLS, BW, BH to validate x & y!
+        // calculate row and column index given x and y coordinates
+        // <snip!>
+
+        int XMAX = XBASE + BW * COLS;
+        int YMAX = YBASE + BH * ROWS;
+        // if x and y are both outside the board, set both to -1
+        if (!(x >= XBASE && x <= XMAX) || !(y >= YBASE && y <= YMAX)) {
+            rc.row = -1;
+            rc.col = -1;
+        } else {
+            // else, it IS inside the board, so find which tile it is on
+            rc.row = (y - YBASE) / BH;
+            rc.col = (x - XBASE) / BW;
+        }
+
+        print("getIndex: r = " + rc.row + ", c = " + rc.col);
+        return rc;
+    }
+    @Override
+    public boolean onTouchEvent(MotionEvent e)
+    {
+        touchX = (int) e.getX();
+        touchY = (int) e.getY();
+        print("onTouchEvent: x = " + touchX + ", y = " + touchY);
+        RowCol rc;
+        rc = getIndex(touchX, touchY);
+        // validate row and col? and update status array // (set -1)
+        // <snip>
+        // if not invalid, update status array
+        if (!(rc.row == -1 || rc.col == -1)) {
+            int xlocat = XBASE+BW*rc.col;
+            int ylocat = YBASE+BH*rc.row;
+            // update TILE to EMPTY
+            if (status[rc.col][rc.row] == TILE) {
+                status[rc.col][rc.row] = EMPTY;
+            } // Update EMPTY to TILE
+            else if (status[rc.col][rc.row] == EMPTY) {
+                status[rc.col][rc.row] = TILE;
+            }
+        } // else, do not update status array
+
+        // display coordinants?
+
+        invalidate();
+        return super.onTouchEvent(e);
     }
 }
 
