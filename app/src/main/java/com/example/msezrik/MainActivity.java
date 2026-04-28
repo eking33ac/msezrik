@@ -183,9 +183,9 @@ class MineSweeperView extends View {
 
 
         // display coordinants
-        fg.setColor(Color.BLACK);
+        /* fg.setColor(Color.BLACK);
         fg.setTextSize(24);
-        this.canvas.drawText("x = " + touchX + ", y = " + touchY, touchX, touchY, fg);
+        this.canvas.drawText("x = " + touchX + ", y = " + touchY, touchX, touchY, fg); */
     }
 
     private RowCol getIndex(int x, int y)
