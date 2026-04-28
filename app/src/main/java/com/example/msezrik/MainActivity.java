@@ -246,11 +246,8 @@ class MineSweeperView extends View {
             } else {
                 longPress = false;
             }
-
             RowCol rc;
             rc = getIndex(touchX, touchY);
-            // validate row and col? and update status array // (set -1)
-            // <snip>
             // if place user clicked is on the board (not invalid) update status array
             if (!(rc.row == -1 || rc.col == -1)) {
                 int xlocat = XBASE + BW * rc.col;
@@ -259,35 +256,24 @@ class MineSweeperView extends View {
                 if (!longPress && status[rc.col][rc.row] == TILE) {
                     // If there is a bomb at that row-col index
                     if (isbomb[rc.col][rc.row]) {
-                        // set status to comb
-                        status[rc.col][rc.row] = BOMB;
-                        // toast GAME OVER
-                        print("Game Over");
-                        // set game_over to true
-                        game_over = true;
+                        status[rc.col][rc.row] = BOMB; // set status to bomb
+                        print("Game Over"); // toast GAME OVER
+                        game_over = true; // set game_over to true
                     } else {
                         // count neighboring bombs and assign that to the status array at this row-col index
                         status[rc.col][rc.row] = countNeighboringBombs(rc.col, rc.row);
                     }
-                } // if longpress is true
-                else if (longPress) {
-                    // if status is FLAG
-                    if (status[rc.col][rc.row] == FLAG) {
-                        // Set status to TILE
-                        status[rc.col][rc.row] = TILE;
-                    } // if status is TILE
-                    else if (status[rc.col][rc.row] == TILE) {
-                        // set status to FLAG
-                        status[rc.col][rc.row] = FLAG;
+                }
+                else if (longPress) { // if longpress is true
+                    if (status[rc.col][rc.row] == FLAG) { // if status is FLAG
+                        status[rc.col][rc.row] = TILE; // Set status to TILE
+                    }
+                    else if (status[rc.col][rc.row] == TILE) { // if status is TILE
+                        status[rc.col][rc.row] = FLAG; // set status to FLAG
                     }
                 }
             }
-            // Update EMPTY to TILE
-            /* else if (status[rc.col][rc.row] == EMPTY) {
-                status[rc.col][rc.row] = TILE;
-            } */
-            // Update the screen
-            invalidate();
+            invalidate(); // Update the screen
         }
         // return super.onTouchEvent(e);
         return true;
