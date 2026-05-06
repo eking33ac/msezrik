@@ -225,6 +225,57 @@ class MineSweeperView extends View {
         if ((r < R) && (c < C) && (isbomb[r + 1][c + 1])) count++;
         return count;
     }
+
+    private void clearBlankNeighbors(int r, int c) {
+        status[r][c] = EMPTY;
+        int n = countNeighboringBombs(r, c);
+        if (n == 0) {
+            for (int i = -1; i <= 1; i++) {
+                for (int j = -1; j <= 1; j++) {
+                    // Clear rows & columns if the tile
+                    // has not already been EMPTY
+                    if ((r + i < ROWS) && (r + i >= 0) && (c + j < COLS) && (c + j >= 0) &&
+                            (status[r + i][c + j] == TILE)) {
+                        // Recursive call to clear open tiles.
+                        clearBlankNeighbors(r + i, c + j);
+                    }
+                }
+            }
+        } else {
+            status[r][c] = n;
+        }
+    }
+
+    private boolean checkForWin() {
+        boolean userWon = false; // return value
+
+        int tileCounter = 0;
+        int flagCounter = 0;
+
+        // for each row
+        for (int i = 0; i < ROWS; i++) {
+            // for each column
+            for (int j = 0; j < COLS; j++) {
+                // If tile is a TILE, increment tile count
+                if (status[i][j] == TILE) {
+                    tileCounter++;
+                }
+                // if tile is a FLAG, increment flag count
+                else if (status[i][j] == FLAG) {
+                    flagCounter++;
+                }
+            }
+        }
+
+        // Check if there are NO TILES AND FLAGS == NUMBOMBS
+        if (tileCounter == 0 && flagCounter == NUMBOMBS) {
+            userWon = true;
+        }
+
+        return userWon;
+    }
+
+
     @Override
     public boolean onTouchEvent(MotionEvent e)
     {
@@ -261,7 +312,14 @@ class MineSweeperView extends View {
                         game_over = true; // set game_over to true
                     } else {
                         // count neighboring bombs and assign that to the status array at this row-col index
-                        status[rc.col][rc.row] = countNeighboringBombs(rc.col, rc.row);
+                        // status[rc.col][rc.row] = countNeighboringBombs(rc.col, rc.row);
+
+                        int n = countNeighboringBombs(rc.col, rc.row);
+                        if (n > 0) {
+                            status[rc.col][rc.row] = n;
+                        } else {
+                            clearBlankNeighbors(rc.col, rc.row);
+                        }
                     }
                 }
                 else if (longPress) { // if longpress is true
@@ -273,6 +331,13 @@ class MineSweeperView extends View {
                     }
                 }
             }
+
+            // If the user won
+            if (checkForWin()) {
+                print("You won!");
+                game_over = true;
+            }
+
             invalidate(); // Update the screen
         }
         // return super.onTouchEvent(e);
