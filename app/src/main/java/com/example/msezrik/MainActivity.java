@@ -28,6 +28,8 @@ class MineSweeperView extends View {
     private final int BH=40;
     private final int ROWS=10;
     private final int COLS=10;
+    private final int xUPDATE_STR = XBASE + 2;
+    private final int yUPDATE_STR = YBASE + ROWS*BW + BW;
     private final int NUMBOMBS = 12;
     private final int TILE = 10;
     private final int EMPTY = 0;
@@ -43,6 +45,8 @@ class MineSweeperView extends View {
     private final int BLUE8 = 8;
 
     private int flags_remaining = NUMBOMBS;
+    private String updateStr = "Flags Placed: " + 0 + "\nBombs: " + NUMBOMBS;
+    private String RESTART = "RESTART?";
     private boolean game_over = false;
     Context activityContext;
     Canvas canvas;
@@ -65,6 +69,19 @@ class MineSweeperView extends View {
         public int row;
         public int col;
     }
+
+    Rect bounds = new Rect();
+    void drawString(Canvas canvas, Paint paint, String str, int x, int y) {
+        String[] lines = str.split("\n");
+
+        int yoff = 0;
+        for (int i = 0; i < lines.length; ++i) {
+            canvas.drawText(lines[i], x, y + yoff, paint);
+            paint.getTextBounds(lines[i], 0, lines[i].length(), bounds);
+            yoff += bounds.height() + 25;
+        }
+    }
+
     private void print(String s)
     {
         // Log.i(tag, s);
@@ -164,9 +181,9 @@ class MineSweeperView extends View {
 
         // DRAW Game Board Border
         int dfb = 2;    // distance of border from board
-        int leftX = XBASE-dfb;
+        int leftX = XBASE-dfb-1;
         int rightX = XBASE+BW*COLS+dfb; // should it be +(dfb-1)? It looks like 1px may be included by default because of the line or something.
-        int topY = YBASE-dfb;
+        int topY = YBASE-dfb-1;
         int bottomY = YBASE+BH*ROWS+dfb;
 
         // Horizontal Lines
@@ -182,10 +199,17 @@ class MineSweeperView extends View {
         canvas.drawLine(rightX, topY, rightX, bottomY, fg);
 
 
-        // display coordinants
-        /* fg.setColor(Color.BLACK);
+        /* Display update string */
+        fg.setColor(Color.BLACK);
         fg.setTextSize(24);
-        this.canvas.drawText("x = " + touchX + ", y = " + touchY, touchX, touchY, fg); */
+
+        drawString(this.canvas, fg, updateStr, xUPDATE_STR, yUPDATE_STR);
+
+
+        /* Display RESTART */
+        fg.setColor(Color.BLUE);
+        fg.setFakeBoldText(true);
+        this.canvas.drawText(RESTART, xUPDATE_STR + BW * 7, yUPDATE_STR, fg);
     }
 
     private RowCol getIndex(int x, int y)
@@ -275,15 +299,82 @@ class MineSweeperView extends View {
         return userWon;
     }
 
+    private void resetGame() {
+        // reset gameover
+        game_over = false;
+
+        /* Reset code copied from Constructor */
+        status = new int[ROWS][COLS];
+        isbomb = new boolean[ROWS][COLS];
+
+        // Set all tiles to TILE and set all isbomb to false
+        for (int i=0; i<ROWS; i++) {
+            for (int j=0; j<COLS; j++) {
+                status[i][j] = TILE;
+                isbomb[i][j] = false; // all should be initialized to false without this, so this is included for clairity and precaution
+            }
+        }
+
+        // Place the 12 bombs
+        int count = 0;
+        while (count < NUMBOMBS) {
+            int r = (int) (ROWS * Math.random());
+            int c = (int) (COLS * Math.random());
+            if (!isbomb[r][c]) {
+                // COMMENT BELOW OUT
+                // print("bomb placed at [" + r + "][" + c + "]");
+                isbomb[r][c] = true;
+                count++;
+            }
+        }
+
+        /* Reset Variables that have changed */
+        /* Update updateStr */
+        // Count flags
+        int flagCounter = 0;
+
+        // for each row
+        for (int i = 0; i < ROWS; i++) {
+            // for each column
+            for (int j = 0; j < COLS; j++) {
+                // if tile is a FLAG, increment flag count
+                if (status[i][j] == FLAG) {
+                    flagCounter++;
+                }
+            }
+        }
+        if (!game_over) { // If game is still going, normal counter update
+            updateStr = "Flags Placed: " + flagCounter + "\nBombs: " + NUMBOMBS;
+        } else { // If game is over
+            if (checkForWin()) { // If user won
+                updateStr = "You won!";
+            } else { // If user lost
+                updateStr = "You Lost!";
+            }
+        }
+
+        // redraw board to update updateStr
+        invalidate();
+    }
 
     @Override
     public boolean onTouchEvent(MotionEvent e)
     {
-        // don't do anything if game is over
-        if (game_over) { return true; } // Must return SOMETHING, so I set it to true like at the end of the method
         touchX = (int) e.getX();
         touchY = (int) e.getY();
-        // print("onTouchEvent: x = " + touchX + ", y = " + touchY);
+
+        // Check if user pressed RESTART
+        if ( (touchX >= (xUPDATE_STR + BW * (COLS-3)) && touchX <= xUPDATE_STR + BW*COLS) && (touchY >= yUPDATE_STR - BH && touchY <= (yUPDATE_STR)) ) {
+            print("RESTARTING");
+
+            resetGame();
+
+            invalidate(); // Update the screen
+            return true; // Stop running further code
+        }
+
+        // don't do anything if game is over
+        if (game_over) { return true; } // Must return SOMETHING, so I set it to true like at the end of the method
 
         // Detect Longtouch event
         int action = e.getAction();
@@ -338,6 +429,31 @@ class MineSweeperView extends View {
                 game_over = true;
             }
 
+            /* Update updateStr */
+            // Count flags
+            int flagCounter = 0;
+
+            // for each row
+            for (int i = 0; i < ROWS; i++) {
+                // for each column
+                for (int j = 0; j < COLS; j++) {
+                    // if tile is a FLAG, increment flag count
+                    if (status[i][j] == FLAG) {
+                        flagCounter++;
+                    }
+                }
+            }
+
+            if (!game_over) { // If game is still going, normal counter update
+                updateStr = "Flags Placed: " + flagCounter + "\nBombs: " + NUMBOMBS;
+            } else { // If game is over
+                if (checkForWin()) { // If user won
+                    updateStr = "You won!";
+                } else { // If user lost
+                    updateStr = "You Lost!";
+                }
+            }
+
             invalidate(); // Update the screen
         }
         // return super.onTouchEvent(e);
@@ -345,8 +461,6 @@ class MineSweeperView extends View {
     }
 
 }
-
-
 
 public class MainActivity extends AppCompatActivity {
 
