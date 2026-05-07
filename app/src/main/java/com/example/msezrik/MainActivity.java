@@ -85,7 +85,7 @@ class MineSweeperView extends View {
     private void print(String s)
     {
         // Log.i(tag, s);
-        Toast.makeText(activityContext, s, Toast.LENGTH_LONG).show();
+        Toast.makeText(activityContext, s, Toast.LENGTH_SHORT).show();
     }
     public MineSweeperView(Context context) {
         super(context);
